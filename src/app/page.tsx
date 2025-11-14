@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default function Page(){
 
@@ -13,8 +14,7 @@ export default function Page(){
     const email = formData.get('email');
     const password = formData.get('password');
     
-    if(email === '' || password === ''){
-      console.log('Preencha todos os campos');
+    if(email === "" || password === ""){
       return;
     }
 
@@ -24,13 +24,24 @@ export default function Page(){
         password
       });
 
+      console.log(response.data);
+
       if(!response.data.token){
         return;
       }
 
+      const cookieStore = await cookies();
+      cookieStore.set('session', response.data.token, { 
+        maxAge: 24 * 60 * 60, // 1 days
+        path: '/',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production' 
+      });
+
       console.log(response.data);
     }catch(err){
       console.log('Erro ao fazer login:', err);
+      return;
     }
 
     redirect('/dashboard');
